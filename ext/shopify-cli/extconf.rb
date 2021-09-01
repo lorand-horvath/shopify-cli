@@ -1,5 +1,6 @@
 require "rbconfig"
 require "fileutils"
+require_relative "./install_extension_server.rb"
 
 gem = File.expand_path("../../../", __FILE__)
 exe = File.join(gem, "bin", "shopify")
@@ -36,6 +37,16 @@ elsif RUBY_PLATFORM.match(/mswin|mingw|cygwin/)
 else
   script = exe + ".sh"
   symlink = "/usr/local/bin/shopify"
+
+  os = /darwin/.match(RUBY_PLATFORM) ? "darwin" : "linux"
+  architecture = "amd64"
+  ShopifyCli::InstallExtensionServer.call(
+    os: os,
+    architecture: architecture,
+    version: "v0.1.0",
+    source: "shopify-extensions",
+    target: "/usr/local/bin/shopify-extensions"
+  )
 
   script_content = <<~SCRIPT
     #!/usr/bin/env bash
