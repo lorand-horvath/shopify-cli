@@ -79,6 +79,8 @@ describe Script::Layers::Infrastructure::ScriptService do
           $configurationUi: Boolean!,
           $configurationDefinition: String!,
           $moduleUploadUrl: String!,
+          $language: String!,
+          $libraryVersion: String!,
         ) {
           appScriptSet(
             uuid: $uuid
@@ -92,6 +94,8 @@ describe Script::Layers::Infrastructure::ScriptService do
             configurationUi: $configurationUi,
             configurationDefinition: $configurationDefinition,
             moduleUploadUrl: $moduleUploadUrl,
+            language: $language,
+            libraryVersion: $libraryVersion,
         ) {
             userErrors {
               field
@@ -106,10 +110,12 @@ describe Script::Layers::Infrastructure::ScriptService do
               title
             }
           }
-        }
+        }#{"      "}
       HERE
     end
     let(:url) { "https://some-bucket" }
+    let(:language) { "assemblyscript" }
+    let(:library_version) { "1.0.0" }
 
     before do
       stub_load_query("script_service_proxy", script_service_proxy)
@@ -130,6 +136,8 @@ describe Script::Layers::Infrastructure::ScriptService do
             configurationUi: expected_configuration_ui,
             configurationDefinition: expected_configuration&.to_json,
             moduleUploadUrl: url,
+            language: language,
+            libraryVersion: library_version,
           }.to_json,
           query: app_script_set,
         },
@@ -150,6 +158,8 @@ describe Script::Layers::Infrastructure::ScriptService do
         script_content: script_content,
         script_json: script_json,
         api_key: api_key,
+        language: language,
+        library_version: library_version,
       )
     end
 

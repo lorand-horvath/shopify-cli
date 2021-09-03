@@ -10,7 +10,9 @@ module Script
           :script_json,
           :script_content,
           :compiled_type,
-          :metadata
+          :metadata,
+          :language,
+          :library_version
 
         def initialize(
           id:,
@@ -19,7 +21,9 @@ module Script
           script_content:,
           compiled_type: nil,
           metadata:,
-          script_json:
+          script_json:,
+          language:,
+          library_version:
         )
           @id = id
           @uuid = uuid
@@ -28,6 +32,8 @@ module Script
           @compiled_type = compiled_type
           @metadata = metadata
           @script_json = script_json
+          @language = language
+          @library_version = library_version
         end
 
         def push(script_service, api_key, force)
@@ -39,6 +45,8 @@ module Script
             force: force,
             metadata: @metadata,
             script_json: @script_json,
+            language: @language,
+            library_version: @library_version
           )
         end
       end

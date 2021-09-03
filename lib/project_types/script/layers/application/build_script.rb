@@ -14,6 +14,7 @@ module Script
                     script_content: task_runner.build,
                     compiled_type: task_runner.compiled_type,
                     metadata: task_runner.metadata,
+                    library_version: task_runner.library_version,
                   )
                   spinner.update_title(ctx.message("script.application.built"))
                 end

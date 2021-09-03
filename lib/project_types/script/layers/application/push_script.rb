@@ -19,6 +19,7 @@ module Script
                 script_project: script_project,
                 compiled_type: task_runner.compiled_type,
                 metadata: task_runner.metadata,
+                library_version: task_runner.library_version,
               )
               uuid = package.push(Infrastructure::ScriptService.new(ctx: p_ctx), script_project.api_key, force)
               script_project_repo.update_env(uuid: uuid)

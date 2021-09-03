@@ -17,7 +17,9 @@ module Script
           api_key: nil,
           force: false,
           metadata:,
-          script_json:
+          script_json:,
+          language:,
+          library_version:
         )
           url = UploadScript.new(ctx).call(api_key, script_content)
 
@@ -34,6 +36,8 @@ module Script
             configurationUi: script_json.configuration_ui,
             configurationDefinition: script_json.configuration&.to_json,
             moduleUploadUrl: url,
+            language: language,
+            libraryVersion: library_version,
           }
           resp_hash = MakeRequest.new(ctx).call(query_name: query_name, api_key: api_key, variables: variables)
           user_errors = resp_hash["data"]["appScriptSet"]["userErrors"]

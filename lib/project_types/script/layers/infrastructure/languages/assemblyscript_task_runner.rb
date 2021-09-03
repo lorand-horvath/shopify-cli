@@ -47,6 +47,17 @@ module Script
             Domain::Metadata.create_from_json(@ctx, raw_contents)
           end
 
+          def library_version
+            # We should use something like:
+            # ep_config.type.language.package
+            # to get the library name
+            library_name = "@shopify/scripts-checkout-apis"
+
+            output, status = ctx.capture2e("npm list --json")
+            raise Errors::DependencyInstallError, output unless status.success?
+            JSON.parse(output)["dependencies"][library_name]["version"]
+          end
+
           private
 
           def check_node_version!

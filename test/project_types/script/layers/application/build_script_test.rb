@@ -12,8 +12,15 @@ describe Script::Layers::Application::BuildScript do
     let(:content) { "content" }
     let(:compiled_type) { "wasm" }
     let(:metadata) { Script::Layers::Domain::Metadata.new("1", "0", false) }
+    let(:library_version) { "1.0.0" }
     let(:task_runner) { stub(compiled_type: compiled_type, metadata: metadata) }
     let(:script_project) { stub }
+
+    before do
+      task_runner
+        .stubs(:library_version)
+        .returns("1.0.0")
+    end
 
     subject do
       Script::Layers::Application::BuildScript.call(
@@ -31,7 +38,8 @@ describe Script::Layers::Application::BuildScript do
           script_project: script_project,
           script_content: content,
           compiled_type: "wasm",
-          metadata: metadata
+          metadata: metadata,
+          library_version: library_version
         )
         capture_io { subject }
       end
