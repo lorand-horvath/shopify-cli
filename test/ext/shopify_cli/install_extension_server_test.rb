@@ -10,8 +10,10 @@ module ShopifyCli
       target = File.join(Dir.mktmpdir, "shopify-extensions")
 
       InstallExtensionServer.call(
-        os: "darwin",
-        architecture: "amd64",
+        platform: Platform.new({
+          "host_os" => "darwin20.3.0",
+          "host_cpu" => "x86_64"
+        }),
         version: "v0.1.0",
         source: "shopify-extensions",
         target: target
@@ -20,6 +22,37 @@ module ShopifyCli
       assert File.file?(target)
       assert File.executable?(target)
       assert_match /Shopify Extensions Dummy/, `#{target}`
+    end
+
+    class PlatformTest < MiniTest::Test
+      def test_recognizes_linux
+        linux_vm = ruby_config(os: "linux-gnu", cpu: "x86_64")
+        assert_equal "linux-amd64", Platform.new(linux_vm).to_s
+      end
+
+      def test_recognices_mac_os
+        intel_mac = ruby_config(os: "darwin20.3.0", cpu: "x86_64")
+        m1_mac = ruby_config(os: "darwin20.3.0", cpu: "arm64")
+
+        assert_equal "darwin-amd64", Platform.new(intel_mac).to_s
+        assert_equal "darwin-arm64", Platform.new(m1_mac).to_s
+      end
+
+      def test_recognices_windows
+        windows_vm_64_bit = ruby_config(os: "mingw32", cpu: "x64")
+        windows_vm_32_bit = ruby_config(os: "mingw32", cpu: "i686")
+        assert_equal "windows-amd64", Platform.new(windows_vm_64_bit).to_s
+        assert_equal "windows-386", Platform.new(windows_vm_32_bit).to_s
+      end
+
+      private
+
+      def ruby_config(os:, cpu:)
+        {
+          "host_os" => os,
+          "host_cpu" => cpu,
+        }
+      end
     end
 
     class AssetTest < MiniTest::Test
@@ -31,7 +64,7 @@ module ShopifyCli
 
         assert_equal "v0.1.0", asset.version
         assert_equal "darwin", asset.os
-        assert_equal "amd64", asset.architecture
+        assert_equal "amd64", asset.cpu
       end
     end
 

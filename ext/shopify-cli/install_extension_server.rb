@@ -6,14 +6,14 @@ require 'rubygems/package'
 
 module ShopifyCli
   class InstallExtensionServer
-    def self.call(**args)
-      new.call(**args)
+    def self.call(platform: Platform.new, **args)
+      new.call(platform: platform, **args)
     end
 
-    def call(os:, architecture:, version:, source:, target:)
+    def call(platform:, version:, source:, target:)
       releases
         .find { |release| release.version == version }
-        .download(os: os, architecture: architecture, source: source, target: target)
+        .download(platform: platform, source: source, target: target)
     end
 
     private
@@ -41,10 +41,10 @@ module ShopifyCli
       end
     end
 
-    def download(os:, architecture:, source:, target:)
+    def download(platform:, source:, target:)
       assets
         .filter(&:binary?)
-        .find { |asset| asset.os == os && asset.architecture == architecture }
+        .find { |asset| asset.os == platform.os && asset.cpu == platform.cpu }
         .download(source: source, target: target)
     end
   end
@@ -81,7 +81,7 @@ module ShopifyCli
       name_without_extension.split("-")[-2]
     end
 
-    def architecture
+    def cpu
       name_without_extension.split("-")[-1]
     end
 
@@ -114,6 +114,38 @@ module ShopifyCli
         File.basename(name, "_checksum.txt")
       else
         raise NotImplementedError, "Unknown file type"
+      end
+    end
+
+    Platform = Struct.new(:ruby_config) do
+      def initialize(ruby_config = RbConfig::CONFIG)
+        super(ruby_config)
+      end
+
+      def to_s
+        format("%{os}-%{cpu}", os: os, cpu: cpu)
+      end
+
+      def os
+        case ruby_config.fetch('host_os')
+        when /linux/
+          "linux"
+        when /darwin/
+          "darwin"
+        else
+          "windows"
+        end
+      end
+
+      def cpu
+        case ruby_config.fetch('host_cpu')
+        when /arm.*64/
+          "arm64"
+        when /64/
+          "amd64"
+        else
+          "386"
+        end
       end
     end
   end
