@@ -1,28 +1,46 @@
-require 'open-uri'
-require 'json'
-require 'zlib'
-require 'rubygems'
-require 'rubygems/package'
+require "rbconfig"
+require "open-uri"
+require "json"
+require "zlib"
+require "rubygems"
+require "rubygems/package"
 
-module ShopifyCli
-  class InstallExtensionServer
+module ShopifyExtensions
+  class InstallationError < RuntimeError
+    def self.not_executable
+      new("Failed to install shopify-extensions")
+    end
+
+    def self.incorrect_version
+      new("Failed to install the correct version of shopify-extensions")
+    end
+  end
+
+  def self.install(**args)
+    Install.call(**args)
+  end
+
+  class Install
     def self.call(platform: Platform.new, **args)
       new.call(platform: platform, **args)
     end
 
     def call(platform:, version:, source:, target:)
+      source = platform.format_path(source)
+      target = platform.format_path(target)
+
       releases
         .find { |release| release.version == version }
         .download(platform: platform, source: source, target: target)
 
-      raise "Failed to install extension development server" unless File.executable?(target)
-      raise "Failed to isntall the correct extension development server version" unless `#{target} version`.strip == version.strip
+      raise InstallationError.not_executable unless File.executable?(target)
+      raise InstallationError.incorrect_version unless %x(#{target} version).strip == version.strip
     end
 
     private
 
     def releases
-      JSON.parse(URI.open(release_url).read).map(&Release)
+      JSON.parse(URI.parse(release_url).open.read).map(&Release)
     end
 
     def release_url
@@ -65,7 +83,7 @@ module ShopifyCli
     def download(source:, target:)
       Dir.chdir(File.dirname(target)) do
         File.open(File.basename(target), "w") do |target_file|
-          unpack(source, from: decompress(URI.open(url)), to: target_file)
+          unpack(source, from: decompress(URI.parse(url).open), to: target_file)
         end
         File.chmod(0755, target)
       end
@@ -124,12 +142,21 @@ module ShopifyCli
         super(ruby_config)
       end
 
+      def format_path(path)
+        case os
+        when "windows"
+          path + ".exe"
+        else
+          path
+        end
+      end
+
       def to_s
         format("%{os}-%{cpu}", os: os, cpu: cpu)
       end
 
       def os
-        case ruby_config.fetch('host_os')
+        case ruby_config.fetch("host_os")
         when /linux/
           "linux"
         when /darwin/
@@ -140,7 +167,7 @@ module ShopifyCli
       end
 
       def cpu
-        case ruby_config.fetch('host_cpu')
+        case ruby_config.fetch("host_cpu")
         when /arm.*64/
           "arm64"
         when /64/
