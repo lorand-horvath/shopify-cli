@@ -4,6 +4,7 @@ require "json"
 require "zlib"
 require "rubygems"
 require "rubygems/package"
+require "open3"
 
 module ShopifyExtensions
   class InstallationError < RuntimeError
@@ -33,13 +34,15 @@ module ShopifyExtensions
       source = platform.format_path(source)
       target = platform.format_path(target)
 
-      release = releases.find { |release| release.version == version }
-      raise InstallationError.release_not_found unless release
-
-      release.download(platform: platform, source: source, target: target)
+      releases
+        .find { |release| release.version == version }
+        .tap { |release| raise InstallationError.release_not_found unless release }
+        .download(platform: platform, source: source, target: target)
 
       raise InstallationError.not_executable unless File.executable?(target)
-      raise InstallationError.incorrect_version unless %x(#{target} version).strip == version.strip
+
+      installed_server_version, _ = Open3.capture2(target, "version")
+      raise InstallationError.incorrect_version unless installed_server_version.strip == version.strip
     end
 
     private

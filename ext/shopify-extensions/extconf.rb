@@ -16,5 +16,5 @@ begin
   )
 rescue ShopifyExtensions::InstallationError => error
   STDERR.puts("Unable to install shopify-extensions: #{error}")
-  exit 1
+  exit(1)
 end
