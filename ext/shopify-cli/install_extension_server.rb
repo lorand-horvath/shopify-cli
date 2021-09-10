@@ -14,6 +14,9 @@ module ShopifyCli
       releases
         .find { |release| release.version == version }
         .download(platform: platform, source: source, target: target)
+
+      raise "Failed to install extension development server" unless File.executable?(target)
+      raise "Failed to isntall the correct extension development server version" unless `#{target} version`.strip == version.strip
     end
 
     private
@@ -66,7 +69,6 @@ module ShopifyCli
         end
         File.chmod(0755, target)
       end
-      # TODO: checksum verification
     end
 
     def binary?
