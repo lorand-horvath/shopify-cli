@@ -6,6 +6,7 @@ require "rubygems"
 require "rubygems/package"
 
 require_relative "../../vendor/deps/cli-kit/lib/cli/kit"
+require_relative "../../vendor/deps/cli-ui/lib/cli/ui"
 
 module ShopifyExtensions
   class InstallationError < RuntimeError
