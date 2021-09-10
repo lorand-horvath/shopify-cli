@@ -4,7 +4,8 @@ require "json"
 require "zlib"
 require "rubygems"
 require "rubygems/package"
-require "open3"
+
+require_relative "../../vendor/deps/cli-kit/lib/cli/kit"
 
 module ShopifyExtensions
   class InstallationError < RuntimeError
@@ -41,7 +42,7 @@ module ShopifyExtensions
 
       raise InstallationError.not_executable unless File.executable?(target)
 
-      installed_server_version, _ = Open3.capture2(target, "version")
+      installed_server_version, _ = CLI::Kit::System.capture2(target, "version")
       raise InstallationError.incorrect_version unless installed_server_version.strip == version.strip
     end
 
