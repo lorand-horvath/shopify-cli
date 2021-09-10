@@ -14,6 +14,10 @@ module ShopifyExtensions
     def self.incorrect_version
       new("Failed to install the correct version of shopify-extensions")
     end
+
+    def self.release_not_found
+      new("Release not found")
+    end
   end
 
   def self.install(**args)
@@ -29,9 +33,10 @@ module ShopifyExtensions
       source = platform.format_path(source)
       target = platform.format_path(target)
 
-      releases
-        .find { |release| release.version == version }
-        .download(platform: platform, source: source, target: target)
+      release = releases.find { |release| release.version == version }
+      raise InstallationError.release_not_found unless release
+
+      release.download(platform: platform, source: source, target: target)
 
       raise InstallationError.not_executable unless File.executable?(target)
       raise InstallationError.incorrect_version unless %x(#{target} version).strip == version.strip

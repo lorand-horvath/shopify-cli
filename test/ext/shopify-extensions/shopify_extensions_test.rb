@@ -3,7 +3,7 @@ require_relative "../../../ext/shopify-extensions/shopify_extensions.rb"
 
 module ShopifyExtensions
   class ShopfyExtensionsTest < Minitest::Test
-    def test_installation
+    def test_installation_of_existing_version
       stub_releases_request
       stub_executable_download
 
@@ -22,6 +22,25 @@ module ShopifyExtensions
       assert File.file?(target)
       assert File.executable?(target)
       assert_match(/v0.1.0/, %x(#{target}))
+    end
+
+    def test_installation_of_non_existing_version
+      stub_releases_request
+      stub_executable_download
+
+      target = File.join(Dir.mktmpdir, "shopify-extensions")
+
+      assert_raises(InstallationError) do
+        Install.call(
+          platform: Platform.new({
+            "host_os" => "darwin20.3.0",
+            "host_cpu" => "x86_64",
+          }),
+          version: "v0.0.0",
+          source: "shopify-extensions",
+          target: target
+        )
+      end
     end
 
     class PlatformTest < MiniTest::Test
