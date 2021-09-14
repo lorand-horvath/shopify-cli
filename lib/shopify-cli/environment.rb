@@ -17,6 +17,20 @@ module ShopifyCli
       )
     end
 
+    def self.automatic_error_tracking_enabled?(env_variables: ENV)
+      env_variable_truthy?(
+        Constants::EnvironmentVariables::AUTOMATIC_ERROR_REPORTING_ENABLED,
+        env_variables: env_variables
+      )
+    end
+
+    def self.development?(env_variables: ENV)
+      env_variable_truthy?(
+        Constants::EnvironmentVariables::DEVELOPMENT,
+        env_variables: env_variables
+      )
+    end
+
     def self.running_tests?(env_variables: ENV)
       env_variable_truthy?(
         Constants::EnvironmentVariables::RUNNING_TESTS,

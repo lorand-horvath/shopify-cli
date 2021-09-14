@@ -14,6 +14,13 @@ module ShopifyCli
         },
       },
       core: {
+        error_reporting: {
+          enable_automatic_reporting_prompt: {
+            message: "Would you like to automatically report errors? It will help us provide a more reliable experience.",
+            yes: "Yes",
+            no: "No",
+          },
+        },
         connect: {
           already_connected_warning: "{{yellow:! This app appears to be already connected}}",
           project_type_select: "What type of project would you like to connect?",
