@@ -3,7 +3,7 @@ require_relative "../../../ext/shopify-extensions/shopify_extensions.rb"
 
 module ShopifyExtensions
   class ShopfyExtensionsTest < Minitest::Test
-    def test_installation_of_existing_version
+    def test_installation_of_existing_version_for_mac_os
       stub_releases_request
       stub_executable_download
 
@@ -15,13 +15,31 @@ module ShopifyExtensions
           "host_cpu" => "x86_64",
         }),
         version: "v0.1.0",
-        source: "shopify-extensions",
         target: target
       )
 
       assert File.file?(target)
       assert File.executable?(target)
       assert_match(/v0.1.0/, %x(#{target}))
+    end
+
+    def test_installation_of_existing_version_for_windows
+      stub_releases_request
+      stub_executable_download
+
+      target = File.join(dir = Dir.mktmpdir, "shopify-extensions.exe")
+
+      Install.call(
+        platform: Platform.new({
+          "host_os" => "mingw32",
+          "host_cpu" => "x64",
+        }),
+        version: "v0.1.0",
+        target: target
+      )
+
+      assert File.file?(target)
+      assert File.executable?(target)
     end
 
     def test_installation_of_non_existing_version
@@ -37,7 +55,6 @@ module ShopifyExtensions
             "host_cpu" => "x86_64",
           }),
           version: "v0.0.0",
-          source: "shopify-extensions",
           target: target
         )
       end
@@ -80,14 +97,23 @@ module ShopifyExtensions
     end
 
     class AssetTest < MiniTest::Test
-      def test_initialization
+      def test_initialization_for_mac_os
         asset = Asset.new(
-          name: "shopify-extensions-v0.1.0-darwin-amd64.tar.gz",
-          url: "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-v0.1.0-darwin-amd64.tar.gz"
+          name: "shopify-extensions-v0.1.0-darwin-amd64.gz",
+          url: "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-darwin-amd64.gz"
         )
 
-        assert_equal "v0.1.0", asset.version
         assert_equal "darwin", asset.os
+        assert_equal "amd64", asset.cpu
+      end
+
+      def test_initialization_for_windows
+        asset = Asset.new(
+          name: "shopify-extensions-v0.1.0-windows-amd64.exe.gz",
+          url: "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-windows-amd64.exe.gz"
+        )
+
+        assert_equal "windows", asset.os
         assert_equal "amd64", asset.cpu
       end
     end
@@ -95,128 +121,207 @@ module ShopifyExtensions
     def stub_releases_request
       stub_request(:get, "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases")
         .to_return(status: 200, body: <<~JSON)
-          [
-            {
-              "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/49152028",
-              "assets_url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/49152028/assets",
-              "upload_url": "https://uploads.github.com/repos/Shopify/shopify-cli-extensions/releases/49152028/assets{?name,label}",
-              "html_url": "https://github.com/Shopify/shopify-cli-extensions/releases/tag/v0.1.0",
-              "id": 49152028,
-              "author": {
-                "login": "t6d",
-                "id": 77060,
-                "node_id": "MDQ6VXNlcjc3MDYw",
-                "avatar_url": "https://avatars.githubusercontent.com/u/77060?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/t6d",
-                "html_url": "https://github.com/t6d",
-                "followers_url": "https://api.github.com/users/t6d/followers",
-                "following_url": "https://api.github.com/users/t6d/following{/other_user}",
-                "gists_url": "https://api.github.com/users/t6d/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/t6d/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/t6d/subscriptions",
-                "organizations_url": "https://api.github.com/users/t6d/orgs",
-                "repos_url": "https://api.github.com/users/t6d/repos",
-                "events_url": "https://api.github.com/users/t6d/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/t6d/received_events",
-                "type": "User",
-                "site_admin": false
-              },
-              "node_id": "MDc6UmVsZWFzZTQ5MTUyMDI4",
-              "tag_name": "v0.1.0",
-              "target_commitish": "main",
-              "name": "v0.1.0",
-              "draft": false,
-              "prerelease": true,
-              "created_at": "2021-09-07T19:18:18Z",
-              "published_at": "2021-09-07T19:28:55Z",
-              "assets": [
-                {
-                  "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/assets/44246360",
-                  "id": 44246360,
-                  "node_id": "MDEyOlJlbGVhc2VBc3NldDQ0MjQ2MzYw",
-                  "name": "shopify-extensions-v0.1.0-darwin-amd64.tar.gz",
-                  "label": "",
-                  "uploader": {
-                    "login": "github-actions[bot]",
-                    "id": 41898282,
-                    "node_id": "MDM6Qm90NDE4OTgyODI=",
-                    "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                    "gravatar_id": "",
-                    "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                    "html_url": "https://github.com/apps/github-actions",
-                    "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                    "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                    "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                    "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                    "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                    "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                    "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                    "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                    "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                    "type": "Bot",
-                    "site_admin": false
-                  },
-                  "content_type": "application/gzip",
-                  "state": "uploaded",
-                  "size": 5072802,
-                  "download_count": 1,
-                  "created_at": "2021-09-07T19:29:43Z",
-                  "updated_at": "2021-09-07T19:29:44Z",
-                  "browser_download_url": "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-v0.1.0-darwin-amd64.tar.gz"
+        [
+          {
+            "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/49531769",
+            "assets_url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/49531769/assets",
+            "upload_url": "https://uploads.github.com/repos/Shopify/shopify-cli-extensions/releases/49531769/assets{?name,label}",
+            "html_url": "https://github.com/Shopify/shopify-cli-extensions/releases/tag/v0.1.0",
+            "id": 49531769,
+            "author": {
+              "login": "t6d",
+              "id": 77060,
+              "node_id": "MDQ6VXNlcjc3MDYw",
+              "avatar_url": "https://avatars.githubusercontent.com/u/77060?v=4",
+              "gravatar_id": "",
+              "url": "https://api.github.com/users/t6d",
+              "html_url": "https://github.com/t6d",
+              "followers_url": "https://api.github.com/users/t6d/followers",
+              "following_url": "https://api.github.com/users/t6d/following{/other_user}",
+              "gists_url": "https://api.github.com/users/t6d/gists{/gist_id}",
+              "starred_url": "https://api.github.com/users/t6d/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/t6d/subscriptions",
+              "organizations_url": "https://api.github.com/users/t6d/orgs",
+              "repos_url": "https://api.github.com/users/t6d/repos",
+              "events_url": "https://api.github.com/users/t6d/events{/privacy}",
+              "received_events_url": "https://api.github.com/users/t6d/received_events",
+              "type": "User",
+              "site_admin": false
+            },
+            "node_id": "RE_kwDOF4czm84C88t5",
+            "tag_name": "v0.1.0",
+            "target_commitish": "main",
+            "name": "v0.1.0",
+            "draft": false,
+            "prerelease": true,
+            "created_at": "2021-09-14T13:43:17Z",
+            "published_at": "2021-09-14T14:04:11Z",
+            "assets": [
+              {
+                "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/assets/44743653",
+                "id": 44743653,
+                "node_id": "RA_kwDOF4czm84Cqrvl",
+                "name": "shopify-extensions-darwin-amd64.gz",
+                "label": "",
+                "uploader": {
+                  "login": "github-actions[bot]",
+                  "id": 41898282,
+                  "node_id": "MDM6Qm90NDE4OTgyODI=",
+                  "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+                  "html_url": "https://github.com/apps/github-actions",
+                  "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+                  "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+                  "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+                  "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+                  "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+                  "type": "Bot",
+                  "site_admin": false
                 },
-                {
-                  "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/assets/44246361",
-                  "id": 44246361,
-                  "node_id": "MDEyOlJlbGVhc2VBc3NldDQ0MjQ2MzYx",
-                  "name": "shopify-extensions-v0.1.0-darwin-amd64.tar.gz.md5",
-                  "label": "",
-                  "uploader": {
-                    "login": "github-actions[bot]",
-                    "id": 41898282,
-                    "node_id": "MDM6Qm90NDE4OTgyODI=",
-                    "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                    "gravatar_id": "",
-                    "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                    "html_url": "https://github.com/apps/github-actions",
-                    "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                    "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                    "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                    "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                    "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                    "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                    "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                    "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                    "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                    "type": "Bot",
-                    "site_admin": false
-                  },
-                  "content_type": "text/plain",
-                  "state": "uploaded",
-                  "size": 33,
-                  "download_count": 0,
-                  "created_at": "2021-09-07T19:29:44Z",
-                  "updated_at": "2021-09-07T19:29:45Z",
-                  "browser_download_url": "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-v0.1.0-darwin-amd64.tar.gz.md5"
-                }
-              ],
-              "tarball_url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/tarball/v0.1.0",
-              "zipball_url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/zipball/v0.1.0",
-              "body": "Pre-release of `shopify-extensions` for testing the integration with the Shopify CLI."
-            }
-          ]
+                "content_type": "application/gzip",
+                "state": "uploaded",
+                "size": 5073690,
+                "download_count": 0,
+                "created_at": "2021-09-14T14:04:52Z",
+                "updated_at": "2021-09-14T14:04:53Z",
+                "browser_download_url": "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-darwin-amd64.gz"
+              },
+              {
+                "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/assets/44743655",
+                "id": 44743655,
+                "node_id": "RA_kwDOF4czm84Cqrvn",
+                "name": "shopify-extensions-darwin-amd64.md5",
+                "label": "",
+                "uploader": {
+                  "login": "github-actions[bot]",
+                  "id": 41898282,
+                  "node_id": "MDM6Qm90NDE4OTgyODI=",
+                  "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+                  "html_url": "https://github.com/apps/github-actions",
+                  "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+                  "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+                  "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+                  "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+                  "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+                  "type": "Bot",
+                  "site_admin": false
+                },
+                "content_type": "application/octet-stream",
+                "state": "uploaded",
+                "size": 53,
+                "download_count": 0,
+                "created_at": "2021-09-14T14:04:53Z",
+                "updated_at": "2021-09-14T14:04:53Z",
+                "browser_download_url": "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-darwin-amd64.md5"
+              },
+              {
+                "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/assets/44743627",
+                "id": 44743627,
+                "node_id": "RA_kwDOF4czm84CqrvL",
+                "name": "shopify-extensions-windows-amd64.exe.gz",
+                "label": "",
+                "uploader": {
+                  "login": "github-actions[bot]",
+                  "id": 41898282,
+                  "node_id": "MDM6Qm90NDE4OTgyODI=",
+                  "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+                  "html_url": "https://github.com/apps/github-actions",
+                  "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+                  "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+                  "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+                  "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+                  "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+                  "type": "Bot",
+                  "site_admin": false
+                },
+                "content_type": "application/gzip",
+                "state": "uploaded",
+                "size": 5121839,
+                "download_count": 0,
+                "created_at": "2021-09-14T14:04:46Z",
+                "updated_at": "2021-09-14T14:04:47Z",
+                "browser_download_url": "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-windows-amd64.exe.gz"
+              },
+              {
+                "url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/releases/assets/44743629",
+                "id": 44743629,
+                "node_id": "RA_kwDOF4czm84CqrvN",
+                "name": "shopify-extensions-windows-amd64.exe.md5",
+                "label": "",
+                "uploader": {
+                  "login": "github-actions[bot]",
+                  "id": 41898282,
+                  "node_id": "MDM6Qm90NDE4OTgyODI=",
+                  "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+                  "html_url": "https://github.com/apps/github-actions",
+                  "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+                  "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+                  "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+                  "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+                  "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+                  "type": "Bot",
+                  "site_admin": false
+                },
+                "content_type": "application/octet-stream",
+                "state": "uploaded",
+                "size": 57,
+                "download_count": 0,
+                "created_at": "2021-09-14T14:04:47Z",
+                "updated_at": "2021-09-14T14:04:47Z",
+                "browser_download_url": "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-windows-amd64.exe.md5"
+              }
+            ],
+            "tarball_url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/tarball/v0.1.0",
+            "zipball_url": "https://api.github.com/repos/Shopify/shopify-cli-extensions/zipball/v0.1.0",
+            "body": "Initial release for integration testing purposes only."
+          }
+        ]
         JSON
     end
 
     def stub_executable_download
       dummy_archive = load_dummy_archive
 
-      stub_request(:get, "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-v0.1.0-darwin-amd64.tar.gz")
+      stub_request(:get, "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-windows-amd64.exe.gz")
         .to_return(
           status: 200,
           headers: {
             "Content-Type" => "application/octet-stream",
-            "Content-Disposition" => "attachment; filename=shopify-extensions_0.1.0_darwin_amd64.tar.gz",
+            "Content-Disposition" => "attachment; filename=shopify-extensions-windows-amd64.exe.gz",
+            "Content-Length" => dummy_archive.size,
+          },
+          body: dummy_archive
+        )
+
+      stub_request(:get, "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-darwin-amd64.gz")
+        .to_return(
+          status: 200,
+          headers: {
+            "Content-Type" => "application/octet-stream",
+            "Content-Disposition" => "attachment; filename=shopify-extensions-darwin-amd64.gz",
             "Content-Length" => dummy_archive.size,
           },
           body: dummy_archive
@@ -224,7 +329,7 @@ module ShopifyExtensions
     end
 
     def load_dummy_archive
-      path = File.expand_path("../../../fixtures/shopify-extensions.tar.gz", __FILE__)
+      path = File.expand_path("../../../fixtures/shopify-extensions.gz", __FILE__)
       raise "Dummy archive not found: #{path}" unless File.file?(path)
       File.read(path)
     end

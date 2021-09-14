@@ -4,9 +4,7 @@ require "json"
 require "zlib"
 require "rubygems"
 require "rubygems/package"
-
-require_relative "../../vendor/deps/cli-kit/lib/cli/kit"
-require_relative "../../vendor/deps/cli-ui/lib/cli/ui"
+require "open3"
 
 module ShopifyExtensions
   class InstallationError < RuntimeError
@@ -32,18 +30,17 @@ module ShopifyExtensions
       new.call(platform: platform, **args)
     end
 
-    def call(platform:, version:, source:, target:)
-      source = platform.format_path(source)
+    def call(platform:, version:, target:)
       target = platform.format_path(target)
 
       releases
         .find { |release| release.version == version }
         .tap { |release| raise InstallationError.release_not_found unless release }
-        .download(platform: platform, source: source, target: target)
+        .download(platform: platform, target: target)
 
       raise InstallationError.not_executable unless File.executable?(target)
 
-      installed_server_version, _ = CLI::Kit::System.capture2(target, "version")
+      installed_server_version, _ = Open3.capture2(target, "version")
       raise InstallationError.incorrect_version unless installed_server_version.strip == version.strip
     end
 
@@ -72,11 +69,11 @@ module ShopifyExtensions
       end
     end
 
-    def download(platform:, source:, target:)
+    def download(platform:, target:)
       assets
         .filter(&:binary?)
         .find { |asset| asset.os == platform.os && asset.cpu == platform.cpu }
-        .download(source: source, target: target)
+        .download(target: target)
     end
   end
 
@@ -90,17 +87,17 @@ module ShopifyExtensions
       end
     end
 
-    def download(source:, target:)
+    def download(target:)
       Dir.chdir(File.dirname(target)) do
         File.open(File.basename(target), "w") do |target_file|
-          unpack(source, from: decompress(URI.parse(url).open), to: target_file)
+          decompress(URI.parse(url).open, target_file)
         end
         File.chmod(0755, target)
       end
     end
 
     def binary?
-      !!/(tar\.gz)|(zip)$/.match(name)
+      !!/\.gz$/.match(name)
     end
 
     def checksum?
@@ -115,33 +112,20 @@ module ShopifyExtensions
       name_without_extension.split("-")[-1]
     end
 
-    def version
-      name_without_extension.split("-")[-3]
-    end
-
     private
 
-    def decompress(archive)
-      decoder = Zlib::GzipReader.new(archive)
-      unzipped = StringIO.new(decoder.read)
-      decoder.close
-      unzipped
-    end
-
-    def unpack(name, from:, to:)
-      Gem::Package::TarReader.new(from) do |tar|
-        tar.each do |entry|
-          next unless File.basename(entry.full_name) == name
-          to.write(entry.read)
-        end
-      end
+    def decompress(source, target)
+      zlib = Zlib::GzipReader.new(source)
+      target << zlib.read
+    ensure
+      zlib.close
     end
 
     def name_without_extension
       if binary?
-        File.basename(name, ".tar.gz")
+        File.basename(File.basename(name, ".gz"), ".exe")
       elsif checksum?
-        File.basename(name, "_checksum.txt")
+        File.basename(File.basename(name, ".md5"), ".exe")
       else
         raise NotImplementedError, "Unknown file type"
       end
@@ -155,7 +139,7 @@ module ShopifyExtensions
       def format_path(path)
         case os
         when "windows"
-          path + ".exe"
+          File.extname(path) != ".exe" ? path + ".exe" : path
         else
           path
         end
