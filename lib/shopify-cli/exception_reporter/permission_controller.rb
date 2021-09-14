@@ -2,6 +2,9 @@ module ShopifyCli
   module ExceptionReporter
     module PermissionController
       def self.can_send?(context: ShopifyCli::Context.new)
+        # If the terminal is not interactive we can't prompt the user.
+        return false if unless ShopifCli::Environment.interactive?
+
         if user_prompted?
           reporting_enabled?
         else

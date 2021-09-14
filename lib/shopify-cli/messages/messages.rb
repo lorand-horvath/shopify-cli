@@ -16,7 +16,8 @@ module ShopifyCli
       core: {
         error_reporting: {
           enable_automatic_reporting_prompt: {
-            message: "Would you like to automatically report errors? It will help us provide a more reliable experience.",
+            message: "Would you like to automatically report errors?"\
+              " It will help us provide a more reliable experience.",
             yes: "Yes",
             no: "No",
           },

@@ -6,7 +6,8 @@ module ShopifyCli
       return unless report_error?(error)
 
       return if ShopifyCli::Environment.development?
-      return if !ShopifyCli::Environment.automatic_error_tracking_enabled? && !ExceptionReporter::PermissionController.can_send?
+      return if !ShopifyCli::Environment.automatic_error_tracking_enabled? &&
+        !ExceptionReporter::PermissionController.can_send?
 
       ENV["BUGSNAG_DISABLE_AUTOCONFIGURE"] = "1"
       require "bugsnag"
