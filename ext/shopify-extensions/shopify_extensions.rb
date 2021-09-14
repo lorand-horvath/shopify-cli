@@ -77,11 +77,11 @@ module ShopifyExtensions
     end
   end
 
-  Asset = Struct.new(:name, :url, keyword_init: true) do
+  Asset = Struct.new(:filename, :url, keyword_init: true) do
     def self.to_proc
       ->(asset_data) do
         new(
-          name: asset_data.fetch("name"),
+          filename: asset_data.fetch("name"),
           url: asset_data.fetch("browser_download_url")
         )
       end
@@ -97,19 +97,19 @@ module ShopifyExtensions
     end
 
     def binary?
-      !!/\.gz$/.match(name)
+      !!/\.gz$/.match(filename)
     end
 
     def checksum?
-      !!/\.md5$/.match(name)
+      !!/\.md5$/.match(filename)
     end
 
     def os
-      name_without_extension.split("-")[-2]
+      name.split("-")[-2]
     end
 
     def cpu
-      name_without_extension.split("-")[-1]
+      name.split("-")[-1]
     end
 
     private
@@ -121,11 +121,11 @@ module ShopifyExtensions
       zlib.close
     end
 
-    def name_without_extension
+    def name
       if binary?
-        File.basename(File.basename(name, ".gz"), ".exe")
+        File.basename(File.basename(filename, ".gz"), ".exe")
       elsif checksum?
-        File.basename(File.basename(name, ".md5"), ".exe")
+        File.basename(File.basename(filename, ".md5"), ".exe")
       else
         raise NotImplementedError, "Unknown file type"
       end

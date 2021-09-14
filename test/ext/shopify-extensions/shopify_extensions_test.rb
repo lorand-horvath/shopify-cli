@@ -99,7 +99,7 @@ module ShopifyExtensions
     class AssetTest < MiniTest::Test
       def test_initialization_for_mac_os
         asset = Asset.new(
-          name: "shopify-extensions-v0.1.0-darwin-amd64.gz",
+          filename: "shopify-extensions-v0.1.0-darwin-amd64.gz",
           url: "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-darwin-amd64.gz"
         )
 
@@ -109,7 +109,7 @@ module ShopifyExtensions
 
       def test_initialization_for_windows
         asset = Asset.new(
-          name: "shopify-extensions-v0.1.0-windows-amd64.exe.gz",
+          filename: "shopify-extensions-v0.1.0-windows-amd64.exe.gz",
           url: "https://github.com/Shopify/shopify-cli-extensions/releases/download/v0.1.0/shopify-extensions-windows-amd64.exe.gz"
         )
 
